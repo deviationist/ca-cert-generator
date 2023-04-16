@@ -28,7 +28,7 @@ mkdir -p "$CERT_OUTPUT_FOLDER"
 
 if [[ ! -f "${OUTPUT_FOLDER}ca.pem" ]]; then
     if [[ ! -f "${OUTPUT_FOLDER}ca.key" ]]; then
-        openssl genrsa -aes256 -out "${OUTPUT_FOLDER}ca.key" 4096 -passout "pass:$PASS"
+        openssl genrsa -aes256 -passout "pass:$PASS" -out "${OUTPUT_FOLDER}ca.key" 4096
     fi
     openssl req -x509 -new -nodes -key "${OUTPUT_FOLDER}ca.key" -days "$DAYS" -passin "pass:$PASS" -out "${OUTPUT_FOLDER}ca.pem" -subj "/CN=$CA_NAME"
 fi
