@@ -3,7 +3,7 @@ This is a simple bash script that uses OpenSSL to generate a CA ceritifcate alon
 
 ## Usage
 Command:
-```./generate.sh [DOMAIN] [CM_NAME] [PASS] [VALID_FOR_DAYS]```
+```./generate.sh [DOMAIN] [CM_NAME] [PASS] [VALID_FOR_DAYS](optional)```
 
 `VALID_FOR_DAYS` is set to 10 years (3650 days) by default.
 
@@ -11,6 +11,8 @@ Example usage:<br>
 ```./generate.sh "*.your-domain.local" "YourCM" "your-super-secret-password" 397```
 
 The files will be placed in `output/[CM_NAME]`, in this case `output/YourCM`.
+
+If you get permission errors then run `chmod +x generate.sh`.
 
 You can then use `[DOMAIN].crt` and "[DOMAIN].key" in your webserver-config to establish valid HTTPS-connection. In this case the filenames would be `*.your-domain.local.crt` and `*.your-domain.local.key`.
 
