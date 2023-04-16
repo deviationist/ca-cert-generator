@@ -13,11 +13,9 @@ Command:
 Example usage:<br>
 ```./generate.sh "your-domain.local,*.your-domain.local" "YourCM" "your-super-secret-password" 397```
 
-The files will be placed in `output/[CM_NAME]`, in this case `output/YourCM`.
-
 If you get permission errors then run `chmod +x generate.sh`.
 
-You can then use `[DOMAIN].crt` and "[DOMAIN].key" in your webserver-config to establish valid HTTPS-connection. In this case the filenames would be `*.your-domain.local.crt` and `*.your-domain.local.key`.
+The files will be placed in `output/[CM_NAME]`, in this case `output/YourCM`. You can then use `[DOMAIN].crt` and `[DOMAIN].key` in your webserver-config to establish valid HTTPS-connection. In this case the filenames would be `*.your-domain.local.crt` and `*.your-domain.local.key`.
 
 Be sure to store the password if you want to add additional server certificates in the future.
 
