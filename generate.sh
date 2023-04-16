@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-DOMAIN=$1
+DOMAINS=$1
 CA_NAME=$2
 PASS=$3
 DAYS=${4:-3650}
@@ -20,11 +20,45 @@ green () {
 }
 
 cleanup() {
-    rm -f "${OUTPUT_FOLDER}v3.ext" "${OUTPUT_FOLDER}ca.srl" "${CERT_OUTPUT_FOLDER}${DOMAIN}.csr"
+    rm -f "${OUTPUT_FOLDER}v3.ext" "${OUTPUT_FOLDER}ca.srl" "${CERT_OUTPUT_FOLDER}${MAIN_DOMAIN}.csr"
 }
+
+generateExtensionFile() {
+    STRING=""
+    if [ "$DOMAIN_COUNT" -gt 1 ]; then
+        I=0
+        for DOMAIN in "${DOMAIN_ARRAY[@]}"
+        do
+            STRING="${STRING}DNS.${I}=${DOMAIN}\n"
+            I=$((I+1))
+        done
+        echo -e "[EXT]\nsubjectAltName=@alt_names\n[alt_names]\n${STRING}"
+    else
+        echo -e "[EXT]\nsubjectAltName=DNS.0:$MAIN_DOMAIN"
+    fi
+}
+
+if [ -z "$DOMAINS" ]; then
+    red "Domain(s) not specified, aborting."
+    exit 1;
+fi
+
+if [ -z "$CA_NAME" ]; then
+    red "CA name not specified, aborting."
+    exit 1;
+fi
+
+if [ -z "$PASS" ]; then
+    red "CA password not specified, aborting."
+    exit 1;
+fi
 
 mkdir -p "$OUTPUT_FOLDER"
 mkdir -p "$CERT_OUTPUT_FOLDER"
+
+IFS=',' read -ra DOMAIN_ARRAY <<< "$DOMAINS"
+DOMAIN_COUNT=${#DOMAIN_ARRAY[@]}
+MAIN_DOMAIN="${DOMAIN_ARRAY[0]}"
 
 if [[ ! -f "${OUTPUT_FOLDER}ca.pem" ]]; then
     if [[ ! -f "${OUTPUT_FOLDER}ca.key" ]]; then
@@ -33,26 +67,24 @@ if [[ ! -f "${OUTPUT_FOLDER}ca.pem" ]]; then
     openssl req -x509 -new -nodes -key "${OUTPUT_FOLDER}ca.key" -days "$DAYS" -passin "pass:$PASS" -out "${OUTPUT_FOLDER}ca.pem" -subj "/CN=$CA_NAME"
 fi
 
-if [[ -f "${OUTPUT_FOLDER}certificates/${DOMAIN}.key" ]] || [[ -f "${CERT_OUTPUT_FOLDER}${DOMAIN}.crt" ]]; then
-    echo "Certificate for domain \"${DOMAIN}\" already exists."
+if [[ -f "${OUTPUT_FOLDER}certificates/${MAIN_DOMAIN}.key" ]] || [[ -f "${CERT_OUTPUT_FOLDER}${MAIN_DOMAIN}.crt" ]]; then
+    echo "Certificate for domain \"${MAIN_DOMAIN}\" already exists."
     exit 1;
 fi
 
-openssl req -nodes -newkey rsa:2048 -keyout "${CERT_OUTPUT_FOLDER}${DOMAIN}.key" -out "${CERT_OUTPUT_FOLDER}${DOMAIN}.csr" -subj "/CN=$DOMAIN"
+openssl req -nodes -newkey rsa:2048 -keyout "${CERT_OUTPUT_FOLDER}${MAIN_DOMAIN}.key" -out "${CERT_OUTPUT_FOLDER}${MAIN_DOMAIN}.csr" -subj "/CN=$MAIN_DOMAIN"
 
-echo "# v3.ext
-[EXT]
-subjectAltName=DNS.0:$DOMAIN" > "${OUTPUT_FOLDER}v3.ext"
+generateExtensionFile > "${OUTPUT_FOLDER}v3.ext"
 
-if ! output=$(openssl x509 -req -in "${CERT_OUTPUT_FOLDER}${DOMAIN}.csr" -CA "${OUTPUT_FOLDER}ca.pem" -CAkey "${OUTPUT_FOLDER}ca.key" -CAcreateserial -passin "pass:$PASS" -out "${CERT_OUTPUT_FOLDER}${DOMAIN}.crt" -days "$DAYS" -extensions EXT -extfile "${OUTPUT_FOLDER}v3.ext"); then
+if ! output=$(openssl x509 -req -in "${CERT_OUTPUT_FOLDER}${MAIN_DOMAIN}.csr" -CA "${OUTPUT_FOLDER}ca.pem" -CAkey "${OUTPUT_FOLDER}ca.key" -CAcreateserial -passin "pass:$PASS" -out "${CERT_OUTPUT_FOLDER}${MAIN_DOMAIN}.crt" -days "$DAYS" -extensions EXT -extfile "${OUTPUT_FOLDER}v3.ext"); then
     echo $output
-    red "Could not generate certificate for domain \"${DOMAIN}\"."
-    rm -f "${CERT_OUTPUT_FOLDER}${DOMAIN}.crt" # Remove failed crt
-    rm -f "${CERT_OUTPUT_FOLDER}${DOMAIN}.key" # Remove failed key
+    red "Could not generate certificate for domain \"${MAIN_DOMAIN}\"."
+    rm -f "${CERT_OUTPUT_FOLDER}${MAIN_DOMAIN}.crt" # Remove failed crt
+    rm -f "${CERT_OUTPUT_FOLDER}${MAIN_DOMAIN}.key" # Remove failed key
     cleanup
     exit 1;
 fi
 
 green "Cleaning up files"
 cleanup
-green "Successfully generated certificate for domain \"${DOMAIN}\"."
+green "Successfully generated certificate for domain \"${MAIN_DOMAIN}\"."

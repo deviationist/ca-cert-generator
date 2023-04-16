@@ -1,14 +1,17 @@
 # CA Cert Generator
 This is a simple bash script that uses OpenSSL to generate a CA ceritifcate along with one or more corresponding server certificates. Very handy if you wanna create valid HTTPS-connections on your LAN.
 
+Based off [this article](https://carpie.net/articles/tls-certificates-for-local-area-networks).
+
 ## Usage
 Command:
-```./generate.sh [DOMAIN] [CM_NAME] [PASS] [VALID_FOR_DAYS](optional)```
+```./generate.sh [DOMAINS] [CM_NAME] [PASS] [VALID_FOR_DAYS](optional)```
 
+`DOMAINS` can be either one domain or multiple separated by comma.
 `VALID_FOR_DAYS` is set to 10 years (3650 days) by default.
 
 Example usage:<br>
-```./generate.sh "*.your-domain.local" "YourCM" "your-super-secret-password" 397```
+```./generate.sh "your-domain.local,*.your-domain.local" "YourCM" "your-super-secret-password" 397```
 
 The files will be placed in `output/[CM_NAME]`, in this case `output/YourCM`.
 
