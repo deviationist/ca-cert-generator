@@ -47,8 +47,8 @@ subjectAltName=DNS.0:$DOMAIN" > "${OUTPUT_FOLDER}v3.ext"
 if ! output=$(openssl x509 -req -in "${CERT_OUTPUT_FOLDER}${DOMAIN}.csr" -CA "${OUTPUT_FOLDER}ca.pem" -CAkey "${OUTPUT_FOLDER}ca.key" -CAcreateserial -passin "pass:$PASS" -out "${CERT_OUTPUT_FOLDER}${DOMAIN}.crt" -days "$DAYS" -extensions EXT -extfile "${OUTPUT_FOLDER}v3.ext"); then
     echo $output
     red "Could not generate certificate for domain \"${DOMAIN}\"."
-    rm -f "${CERT_OUTPUT_FOLDER}${DOMAIN}.key"
-    rm -f "${CERT_OUTPUT_FOLDER}${DOMAIN}.crt"
+    rm -f "${CERT_OUTPUT_FOLDER}${DOMAIN}.crt" # Remove failed crt
+    rm -f "${CERT_OUTPUT_FOLDER}${DOMAIN}.key" # Remove failed key
     cleanup
     exit 1;
 fi
